@@ -36,28 +36,28 @@ def chat(request: ChatRequest):
     db = SessionLocal()
     try:
 
-         print("fetch previous conversation from database")
+        print("fetch previous conversation from database")
 
         messages = db.query(Conversation).filter(
             Conversation.session_id == session_id
         ).order_by(Conversation.timestamp).all()
 
-         print("Previous Messages Found:", len(messages))
+        print("Previous Messages Found:", len(messages))
 
         history = [{"role": m.role, "content": m.content} for m in messages]
         print("Conversation History Loaded:")
         print(history)
 
         history.append({"role": "user", "content": request.message})
-         print("Updated History Sent to AI:")
-         print(history)
+        print("Updated History Sent to AI:")
+        print(history)
 
         
         ai_reply = generate_reply(history)
         print("AI Response Received:")
         print(ai_reply)
 
-         print("Saving messages to database")
+        print("Saving messages to database")
 
        
         db.add(Conversation(role="user", content=request.message, session_id=session_id))
@@ -92,5 +92,5 @@ def get_history(session_id: str):
         ]
         print("Returning history to client")
     finally:
-         print("closing database sess")
+        print("closing database sess")
         db.close()
