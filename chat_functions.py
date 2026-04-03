@@ -11,21 +11,19 @@ print("Creating Groq client")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 print("created successfully")
 
-def generate_reply(user_message):
-    print("User message received:")
-    print(user_message)
+def generate_reply(history):
 
+    messages = []
+
+    for msg in history:
+        messages.append({
+            "role": msg["role"],
+            "content": str(msg["content"])
+        })
 
     chat = client.chat.completions.create(
-        messages=[
-            {"role": "user", "content": user_message}
-        ],
-        model="llama3-8b-8192"
+        model="llama-3.1-8b-instant",
+        messages=messages
     )
-    print("Response received from groq")
-    reply = chat.choices[0].message.content
 
-    print("AI Reply:")
-    print(reply)
-
-    return reply
+    return chat.choices[0].message.content

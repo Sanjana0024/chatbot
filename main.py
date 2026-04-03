@@ -5,6 +5,7 @@ from database import Base, engine, SessionLocal
 from models import Conversation
 from chat_functions import generate_reply
 from uuid import uuid4
+import traceback 
 
 print(" Starting FastAPI Chatbot Server")
 
@@ -15,7 +16,7 @@ print("FastAPI app initialized")
 class ChatRequest(BaseModel):
     message: str
     session_id: str = None 
-    print("ChatRequest model loaded") 
+print("ChatRequest model loaded") 
 
 @app.get("/")
 def read_root():
@@ -25,16 +26,17 @@ def read_root():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    print(" New Chat Request Received")
-
-    print("User Message:", request.message)
-    print("Session ID from request:", request.session_id)
-   
-    session_id = request.session_id or str(uuid4())
-
-    print(" Opening database session")
-    db = SessionLocal()
     try:
+
+        print(" New Chat Request Received")
+
+        print("User Message:", request.message)
+        print("Session ID from request:", request.session_id)
+    
+        session_id = request.session_id or str(uuid4())
+
+        print(" Opening database session")
+        db = SessionLocal()
 
         print("fetch previous conversation from database")
 
@@ -44,7 +46,7 @@ def chat(request: ChatRequest):
 
         print("Previous Messages Found:", len(messages))
 
-        history = [{"role": m.role, "content": m.content} for m in messages]
+        history = [{"role": str(m.role), "content": str(m.content)} for m in messages]
         print("Conversation History Loaded:")
         print(history)
 
@@ -59,12 +61,21 @@ def chat(request: ChatRequest):
 
         print("Saving messages to database")
 
-       
+    
         db.add(Conversation(role="user", content=request.message, session_id=session_id))
         
         db.add(Conversation(role="assistant", content=ai_reply, session_id=session_id))
         db.commit()
         print("Messages saved successfully")
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(error_trace)
+
+        return {
+        "error": "Something went wrong while processing the chat",
+        "traceback": error_trace
+    }
+
 
     finally:
         print("Closing database session")
